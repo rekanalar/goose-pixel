@@ -1,4 +1,4 @@
-// The geometry of the image package. Pure Goose.
+// The geometry of the pixel package. Pure Goose.
 //
 // The calls work on a whole image: a crop, a flip or a turn, a paste, a
 // blend and a rotation by any angle. They follow Pillow: Image.crop,
@@ -8,7 +8,7 @@
 // or with a short buffer, counts as empty. A call never reads or writes
 // outside a buffer.
 
-namespace image;
+namespace pixel;
 
 import std;
 import math;

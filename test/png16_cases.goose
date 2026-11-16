@@ -4,7 +4,7 @@
 namespace png16_cases;
 
 import std;
-import image from "..";
+import pixel from "..";
 
 fn hexval(c: u8) -> i64 {
     if c >= 97 { return c - 87; }
@@ -33,7 +33,7 @@ fn words_of(s: u8[:]) -> u16[] {
 
 // read16 checks the decode of a PNG against the pixels of the oracle.
 fn read16(png: u8[:], w: i32, h: i32, want: u8[:]) {
-    let img = image::decode16(bytes_of(png));
+    let img = pixel::decode16(bytes_of(png));
     assert(img.width == w && img.height == h);
     assert(img.pixels == words_of(want));
 }
@@ -67,46 +67,46 @@ fn check_read16() {
 
 // build_case makes a block through the builder and compares the bytes.
 fn check_exif_build() {
-    var b = image::exif_new();
-    image::exif_set_short(b, 274, 6);
-    assert(image::exif_build(b) == bytes_of("49492a0008000000010012010300010000000600000000000000"));
-    var b = image::exif_new();
-    image::exif_set_text(b, 270, "goose image description");
-    image::exif_set_short(b, 274, 1);
-    assert(image::exif_build(b) == bytes_of("49492a000800000002000e010200180000002600000012010300010000000100000000000000676f6f736520696d616765206465736372697074696f6e00"));
-    var b = image::exif_new();
-    image::exif_set_rational(b, 282, 72, 1);
-    image::exif_set_rational(b, 283, 72, 1);
-    image::exif_set_short(b, 296, 2);
-    assert(image::exif_build(b) == bytes_of("49492a000800000003001a01050001000000320000001b010500010000003a0000002801030001000000020000000000000048000000010000004800000001000000"));
-    var b = image::exif_new();
-    image::exif_set_long(b, 256, 123456);
-    image::exif_set_long(b, 257, 7);
-    image::exif_set_text(b, 315, "ab");
-    image::exif_set_text(b, 272, "abc");
-    assert(image::exif_build(b) == bytes_of("49492a00080000000400000104000100000040e201000101040001000000070000001001020004000000616263003b010200030000006162000000000000"));
-    var b = image::exif_new();
-    image::exif_set_short(b, 274, 3);
-    image::exif_set_short(b, 274, 8);
-    image::exif_set_text(b, 271, "");
-    assert(image::exif_build(b) == bytes_of("49492a000800000002000f010200010000000000000012010300010000000800000000000000"));
-    var b = image::exif_new();
-    image::exif_set_rational(b, 33434, 1, 250);
-    image::exif_set_text(b, 36867, "2026:11:07 12:00:00");
-    image::exif_set_short(b, 274, 5);
-    assert(image::exif_build(b) == bytes_of("49492a000800000003001201030001000000050000009a820500010000003200000003900200140000003a0000000000000001000000fa000000323032363a31313a30372031323a30303a303000"));
+    var b = pixel::exif_new();
+    pixel::exif_set_short(b, 274, 6);
+    assert(pixel::exif_build(b) == bytes_of("49492a0008000000010012010300010000000600000000000000"));
+    var b = pixel::exif_new();
+    pixel::exif_set_text(b, 270, "goose image description");
+    pixel::exif_set_short(b, 274, 1);
+    assert(pixel::exif_build(b) == bytes_of("49492a000800000002000e010200180000002600000012010300010000000100000000000000676f6f736520696d616765206465736372697074696f6e00"));
+    var b = pixel::exif_new();
+    pixel::exif_set_rational(b, 282, 72, 1);
+    pixel::exif_set_rational(b, 283, 72, 1);
+    pixel::exif_set_short(b, 296, 2);
+    assert(pixel::exif_build(b) == bytes_of("49492a000800000003001a01050001000000320000001b010500010000003a0000002801030001000000020000000000000048000000010000004800000001000000"));
+    var b = pixel::exif_new();
+    pixel::exif_set_long(b, 256, 123456);
+    pixel::exif_set_long(b, 257, 7);
+    pixel::exif_set_text(b, 315, "ab");
+    pixel::exif_set_text(b, 272, "abc");
+    assert(pixel::exif_build(b) == bytes_of("49492a00080000000400000104000100000040e201000101040001000000070000001001020004000000616263003b010200030000006162000000000000"));
+    var b = pixel::exif_new();
+    pixel::exif_set_short(b, 274, 3);
+    pixel::exif_set_short(b, 274, 8);
+    pixel::exif_set_text(b, 271, "");
+    assert(pixel::exif_build(b) == bytes_of("49492a000800000002000f010200010000000000000012010300010000000800000000000000"));
+    var b = pixel::exif_new();
+    pixel::exif_set_rational(b, 33434, 1, 250);
+    pixel::exif_set_text(b, 36867, "2026:11:07 12:00:00");
+    pixel::exif_set_short(b, 274, 5);
+    assert(pixel::exif_build(b) == bytes_of("49492a000800000003001201030001000000050000009a820500010000003200000003900200140000003a0000000000000001000000fa000000323032363a31313a30372031323a30303a303000"));
 }
 
 // turn_case checks apply_orientation against ImageOps.exif_transpose.
 fn turn_case(w: i32, h: i32, src: u8[:], o: i64, ew: i32, eh: i32, want: u8[:]) {
-    var b = image::exif_new();
-    image::exif_set_short(b, 0x0112, o);
-    let img = image::Image { width: w, height: h, pixels: bytes_of(src), icc: [], exif: image::exif_build(b) };
-    assert(image::orientation(img) == o);
-    let got = image::apply_orientation(img);
+    var b = pixel::exif_new();
+    pixel::exif_set_short(b, 0x0112, o);
+    let img = pixel::Image { width: w, height: h, pixels: bytes_of(src), icc: [], exif: pixel::exif_build(b) };
+    assert(pixel::orientation(img) == o);
+    let got = pixel::apply_orientation(img);
     assert(got.width == ew && got.height == eh);
     assert(got.pixels == bytes_of(want));
-    if o != 1 { assert(image::orientation(got) == 1); }
+    if o != 1 { assert(pixel::orientation(got) == 1); }
 }
 
 fn check_turn() {

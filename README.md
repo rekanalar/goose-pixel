@@ -1,6 +1,6 @@
-# goose-image
+# goose-pixel
 
-[![ci](https://github.com/rekanalar/goose-image/actions/workflows/ci.yml/badge.svg)](https://github.com/rekanalar/goose-image/actions/workflows/ci.yml)
+[![ci](https://github.com/rekanalar/goose-pixel/actions/workflows/ci.yml/badge.svg)](https://github.com/rekanalar/goose-pixel/actions/workflows/ci.yml)
 
 Image decoding and encoding for the [Goose](https://github.com/aardappel/goose) programming language.
 
@@ -44,9 +44,9 @@ The `exif` field holds the raw TIFF block. Three calls read it:
 | `exif_short(block, tag)` | the value as a number, when it is a SHORT or a LONG |
 
 ```goose
-let img = image::load("photo.jpg");
-let text = image::exif_text(img.exif, 0x010e);  // the description
-let orient = image::exif_short(img.exif, 0x0112);  // the orientation
+let img = pixel::load("photo.jpg");
+let text = pixel::exif_text(img.exif, 0x010e);  // the description
+let orient = pixel::exif_short(img.exif, 0x0112);  // the orientation
 ```
 
 A round trip of load and save keeps the bytes of both fields on JPEG
@@ -54,6 +54,11 @@ and on PNG. The check ran the round trip against Pillow 13.0.0.
 
 ## Limits
 
+- The package was named `image` before v2.0.0. The old form was
+  `import image from "rekanalar/goose-image@v1.0.0";`. The new form is
+  `import pixel from "rekanalar/goose-pixel@v2.0.0";`. A program that
+  used the old name must change its import line and every call from
+  `image::` to `pixel::`.
 - GIF: the writer builds a median-cut palette of 256 colors for each frame.
   It cuts a frame to the box that changed. Disposal 3 is read, and the
   writer keeps whole frames when a frame uses it. The canvases of one GIF
@@ -130,7 +135,7 @@ Risks that stay:
 Put this line in the root file of your program:
 
 ```goose
-import image from "rekanalar/goose-image@v1.0.0";
+import pixel from "rekanalar/goose-pixel@v2.0.0";
 ```
 
 The first run builds the C part of the package. It needs a C compiler on
@@ -143,12 +148,12 @@ and v2026.3 on each.
 
 ```goose
 import std;
-import image from "rekanalar/goose-image@v1.0.0";
+import pixel from "rekanalar/goose-pixel@v2.0.0";
 
 fn main() {
-    var img = image::load("photo.png");
+    var img = pixel::load("photo.png");
     print(img.width, "x", img.height);
-    image::write_jpeg("photo.jpg", img);
+    pixel::write_jpeg("photo.jpg", img);
     return 0;
 }
 ```
@@ -242,11 +247,11 @@ Pillow `Image.crop`, `Image.transpose`, `Image.rotate`, `Image.paste` and
 `Image.alpha_composite`.
 
 ```goose
-var part = image::crop(img, 1, 1, 3, 3);                       // the middle 2x2 pixels
-var turned = image::transpose(img, image::TRANSPOSE_ROTATE_90);
-var tilted = image::rotate(img, 45.0, true);
-image::paste(canvas, part, 2, 1);
-image::alpha_composite(canvas, dot, 0, 0);
+var part = pixel::crop(img, 1, 1, 3, 3);                       // the middle 2x2 pixels
+var turned = pixel::transpose(img, pixel::TRANSPOSE_ROTATE_90);
+var tilted = pixel::rotate(img, 45.0, true);
+pixel::paste(canvas, part, 2, 1);
+pixel::alpha_composite(canvas, dot, 0, 0);
 ```
 
 - The box of `crop` holds the pixels from `left` up to `right`, and from `top`

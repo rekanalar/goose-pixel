@@ -1,4 +1,4 @@
-// The JPEG writer of the goose-image package. It is its own C file.
+// The JPEG writer of the goose-pixel package. It is its own C file.
 //
 // The tables below are the tables of the JPEG standard (Annex K).
 

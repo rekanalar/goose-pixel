@@ -4,7 +4,7 @@
 namespace gif_cases;
 
 import std;
-import image from "..";
+import pixel from "..";
 
 fn hexval(c: u8) -> i64 {
     if c >= 97 { return c - 87; }
@@ -23,26 +23,26 @@ fn from_hex(s: u8[:]) -> u8[] {
 }
 
 fn gif_case(file: u8[:], n: i64, gw: i32, gh: i32, loops: i32) {
-    let g = image::decode_gif(from_hex(file));
+    let g = pixel::decode_gif(from_hex(file));
     assert(g.frames.len == n);
     assert(g.width == gw && g.height == gh);
     assert(g.loop_count == loops);
 }
 
 // frame_at gives a copy of frame i. Frames cannot be indexed.
-fn frame_at(g: image::Gif&, i: i64) -> image::GifFrame {
+fn frame_at(g: pixel::Gif&, i: i64) -> pixel::GifFrame {
     var k = 0;
     for f in g.frames {
         if k == i { return copy(f); }
         k += 1;
     }
     assert(false);
-    let e = image::Image { width: 0, height: 0, pixels: [], icc: [], exif: [] };
-    return image::GifFrame { image: e, delay: 0, disposal: 0 };
+    let e = pixel::Image { width: 0, height: 0, pixels: [], icc: [], exif: [] };
+    return pixel::GifFrame { image: e, delay: 0, disposal: 0 };
 }
 
 fn frame_case(file: u8[:], i: i64, delay: i32, disp: i32, want: u8[:]) {
-    let g = image::decode_gif(from_hex(file));
+    let g = pixel::decode_gif(from_hex(file));
     let f = frame_at(g, i);
     assert(f.delay == delay);
     assert(f.disposal == disp);
@@ -57,13 +57,13 @@ fn frame_case(file: u8[:], i: i64, delay: i32, disp: i32, want: u8[:]) {
 // source do not count.
 fn gif_quant_case(w: i32, h: i32, src: u8[:], bound: i64) {
     let want = from_hex(src);
-    let img = image::Image { width: w, height: h, pixels: copy(want), icc: [], exif: [] };
-    var fs: image::GifFrame[>..] = [];
-    fs.push(image::GifFrame { image: copy(img), delay: 0, disposal: 0 });
-    let g = image::Gif { frames: copy(fs), width: w, height: h, loop_count: 0 };
-    let bytes = image::encode_gif(g);
+    let img = pixel::Image { width: w, height: h, pixels: copy(want), icc: [], exif: [] };
+    var fs: pixel::GifFrame[>..] = [];
+    fs.push(pixel::GifFrame { image: copy(img), delay: 0, disposal: 0 });
+    let g = pixel::Gif { frames: copy(fs), width: w, height: h, loop_count: 0 };
+    let bytes = pixel::encode_gif(g);
     assert(bytes.len > 0);
-    let back = image::decode_gif(bytes);
+    let back = pixel::decode_gif(bytes);
     assert(back.frames.len == 1);
     let fr = frame_at(back, 0);
     let got = fr.image.pixels;
@@ -90,19 +90,19 @@ fn gif_quant_case(w: i32, h: i32, src: u8[:], bound: i64) {
 // frames follow each other in the bytes.
 fn gif_anim_case(w: i32, h: i32, n: i64, src: u8[:], bound: i64) {
     let want = from_hex(src);
-    var fs: image::GifFrame[>..] = [];
+    var fs: pixel::GifFrame[>..] = [];
     var k = 0;
     while k < n {
         var px: u8[>..] = [];
         px.append(want[k * w * h * 4..(k + 1) * w * h * 4]);
-        let img = image::Image { width: w, height: h, pixels: px[..], icc: [], exif: [] };
-        fs.push(image::GifFrame { image: copy(img), delay: 10, disposal: 0 });
+        let img = pixel::Image { width: w, height: h, pixels: px[..], icc: [], exif: [] };
+        fs.push(pixel::GifFrame { image: copy(img), delay: 10, disposal: 0 });
         k += 1;
     }
-    let g = image::Gif { frames: copy(fs), width: w, height: h, loop_count: 0 };
-    let bytes = image::encode_gif(g);
+    let g = pixel::Gif { frames: copy(fs), width: w, height: h, loop_count: 0 };
+    let bytes = pixel::encode_gif(g);
     assert(bytes.len > 0);
-    let back = image::decode_gif(bytes);
+    let back = pixel::decode_gif(bytes);
     assert(back.frames.len == n);
     var f = 0;
     while f < n {

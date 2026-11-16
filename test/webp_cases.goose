@@ -4,7 +4,7 @@
 namespace webp_cases;
 
 import std;
-import image from "..";
+import pixel from "..";
 
 fn hexval(c: u8) -> i64 {
     if c >= 97 { return c - 87; }
@@ -26,10 +26,10 @@ fn from_hex(s: u8[:]) -> u8[] {
 // file must match exactly. A lossy file may differ by the tolerance.
 fn webp_case(file: u8[:], w: i32, h: i32, channels: i32, tol: i32, want: u8[:]) {
     let bytes = from_hex(file);
-    let m = image::metadata_bytes(bytes);
-    assert(m.ok && m.kind == image::KIND_WEBP && m.width == w && m.height == h);
+    let m = pixel::metadata_bytes(bytes);
+    assert(m.ok && m.kind == pixel::KIND_WEBP && m.width == w && m.height == h);
     assert(m.channels == channels);
-    let img = image::decode(bytes);
+    let img = pixel::decode(bytes);
     assert(img.width == w && img.height == h);
     let px = from_hex(want);
     assert(img.pixels.len == px.len);
@@ -43,9 +43,9 @@ fn webp_case(file: u8[:], w: i32, h: i32, channels: i32, tol: i32, want: u8[:]) 
 // nothing gives a size that the bytes do not hold.
 fn hostile_check(file: u8[:]) {
     let bytes = from_hex(file);
-    let img = image::decode(bytes);
+    let img = pixel::decode(bytes);
     assert(img.pixels.len == 0 || img.pixels.len == img.width * img.height * 4);
-    let m = image::metadata_bytes(bytes);
+    let m = pixel::metadata_bytes(bytes);
     if m.ok && img.pixels.len > 0 {
         assert(m.width == img.width && m.height == img.height);
     }

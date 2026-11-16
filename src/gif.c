@@ -1,4 +1,4 @@
-// The GIF codec of the goose-image package.
+// The GIF codec of the goose-pixel package.
 //
 // The reader gives every frame of a GIF as a full canvas of RGBA pixels.
 // The writer takes frames of RGBA pixels and writes a GIF89a file.

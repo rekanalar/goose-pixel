@@ -1,8 +1,8 @@
-// The animated GIF codec of the image package.
+// The animated GIF codec of the pixel package.
 //
 // decode_gif reads every frame of a GIF. encode_gif writes a GIF of many
 // frames. The C part is in src/gif.c.
-namespace image;
+namespace pixel;
 
 import std;
 import os;

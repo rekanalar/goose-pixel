@@ -73,18 +73,18 @@ def hx(px, n):
 
 
 work = tempfile.mkdtemp(dir=os.environ["TMPDIR"], prefix="jpegcases-")
-lines = ["import std;", "import os;", 'import image from "%s";' % pkg, "fn hexval(c: u8) -> i64 {",
+lines = ["import std;", "import os;", 'import pixel from "%s";' % pkg, "fn hexval(c: u8) -> i64 {",
          "    if c >= 97 { return c - 87; }", "    return c - 48;", "}",
-         "fn mk(w: i32, h: i32, s: u8[:]) -> image::Image {", "    var px: u8[>..] = [];", "    var i = 0;",
+         "fn mk(w: i32, h: i32, s: u8[:]) -> pixel::Image {", "    var px: u8[>..] = [];", "    var i = 0;",
          "    while i + 1 < s.len {", "        px.push((hexval(s[i]) * 16 + hexval(s[i + 1])) as u8);", "        i += 2;",
-         "    }", "    return image::Image { width: w, height: h, pixels: px[..], icc: [], exif: [] };", "}",
+         "    }", "    return pixel::Image { width: w, height: h, pixels: px[..], icc: [], exif: [] };", "}",
          "fn main() {"]
 for n, (i, q, prog, sub) in enumerate(cases):
     _, w, h, px = sources[i]
     lines.append('    var a%d = mk(%d, %d, "%s");' % (n, w, h, hx(px, 4)))
-    lines.append('    assert(image::write_jpeg_with("%s/c%d.jpg", a%d, %d, %s, %d));' % (
+    lines.append('    assert(pixel::write_jpeg_with("%s/c%d.jpg", a%d, %d, %s, %d));' % (
         work, n, n, q, "true" if prog else "false", sub))
-    lines.append('    assert(image::write_jpeg_opts("%s/o%d.jpg", a%d, %d, %s, %d, true));' % (
+    lines.append('    assert(pixel::write_jpeg_opts("%s/o%d.jpg", a%d, %d, %s, %d, true));' % (
         work, n, n, q, "true" if prog else "false", sub))
 lines += ["    return 0;", "}"]
 open(os.path.join(work, "driver.goose"), "w").write("\n".join(lines) + "\n")
@@ -99,7 +99,7 @@ w_("namespace jpeg_cases;")
 w_("")
 w_("import std;")
 w_("import os;")
-w_('import image from "..";')
+w_('import pixel from "..";')
 w_("""
 fn hexval(c: u8) -> i64 {
     if c >= 97 { return c - 87; }
@@ -116,8 +116,8 @@ fn bytes_of(s: u8[:]) -> u8[] {
     return px[..];
 }
 
-fn from_hex(w: i32, h: i32, s: u8[:]) -> image::Image {
-    return image::Image { width: w, height: h, pixels: bytes_of(s), icc: [], exif: [] };
+fn from_hex(w: i32, h: i32, s: u8[:]) -> pixel::Image {
+    return pixel::Image { width: w, height: h, pixels: bytes_of(s), icc: [], exif: [] };
 }
 
 // sof_at gives the byte at the offset from the start of the SOF marker, or
@@ -139,7 +139,7 @@ fn sof_at(b: u8[:], off: i64) -> i64 {
 
 // gap gives the largest and the mean difference between the RGBA pixels and
 // the RGB string. The mean is times 1000. It gives -1, -1 for a bad size.
-fn gap(img: image::Image&, w: i32, h: i32, rgb: u8[:]) -> i64, i64 {
+fn gap(img: pixel::Image&, w: i32, h: i32, rgb: u8[:]) -> i64, i64 {
     if img.width != w || img.height != h { return -1, -1; }
     let want = bytes_of(rgb);
     var worst: i64 = 0;
@@ -162,13 +162,13 @@ fn gap(img: image::Image&, w: i32, h: i32, rgb: u8[:]) -> i64, i64 {
 fn jpeg_case(w: i32, h: i32, src: u8[:], q: i32, prog: bool, sub: i32,
     sof: i64, samp: i64, want: u8[:]) {
     let img = from_hex(w, h, src);
-    let bytes = image::encode_jpeg(img, q, prog, sub);
+    let bytes = pixel::encode_jpeg(img, q, prog, sub);
     assert(bytes.len > 4);
     assert(bytes[0] == 0xff && bytes[1] == 0xd8);
     assert(bytes[bytes.len - 2] == 0xff && bytes[bytes.len - 1] == 0xd9);
     assert(sof_at(bytes, 1) == sof);
     assert(sof_at(bytes, 11) == samp);
-    let back = image::decode(bytes);
+    let back = pixel::decode(bytes);
     // The decoder of the package (stb) upsamples the 4:2:2 chroma with a
     // different filter than libjpeg: on a 4:2:2 file that Pillow itself wrote,
     // the two decoders differ by up to 23 levels. So 4:2:2 gets a loose bound.
@@ -178,20 +178,20 @@ fn jpeg_case(w: i32, h: i32, src: u8[:], q: i32, prog: bool, sub: i32,
     if sub == 2 { assert(worst <= 12); }
     if sub == 1 { assert(worst <= 110 && mean <= 2500); }
     // The two forms hold the same coefficients, so the pixels are the same.
-    let other = image::decode(image::encode_jpeg(img, q, !prog, sub));
+    let other = pixel::decode(pixel::encode_jpeg(img, q, !prog, sub));
     assert(back.pixels == other.pixels);
-    let meta = image::metadata_bytes(bytes);
-    assert(meta.ok && meta.width == w && meta.height == h && meta.kind == image::KIND_JPEG);
+    let meta = pixel::metadata_bytes(bytes);
+    assert(meta.ok && meta.width == w && meta.height == h && meta.kind == pixel::KIND_JPEG);
     // The tables of the scan give a smaller file with the same pixels.
-    let opt = image::encode_jpeg_opts(img, q, prog, sub, true);
+    let opt = pixel::encode_jpeg_opts(img, q, prog, sub, true);
     assert(opt.len > 4);
     assert(opt.len <= bytes.len);
     assert(sof_at(opt, 1) == sof);
     assert(sof_at(opt, 11) == samp);
-    let oback = image::decode(opt);
+    let oback = pixel::decode(opt);
     assert(oback.pixels == back.pixels);
-    let ometa = image::metadata_bytes(opt);
-    assert(ometa.ok && ometa.width == w && ometa.height == h && ometa.kind == image::KIND_JPEG);
+    let ometa = pixel::metadata_bytes(opt);
+    assert(ometa.ok && ometa.width == w && ometa.height == h && ometa.kind == pixel::KIND_JPEG);
 }
 """)
 w_("fn check_jpeg() {")
@@ -234,55 +234,55 @@ for n, (i, q, prog, sub) in enumerate(cases):
         w, h, hx(px, 4), q, "true" if prog else "false", sub, sof, samp, hx(rgb, 3)))
 w_("}")
 w_("""
-fn all_gray(w: i32, h: i32) -> image::Image {
-    return image::new_image(w, h, 90, 90, 90, 255);
+fn all_gray(w: i32, h: i32) -> pixel::Image {
+    return pixel::new_image(w, h, 90, 90, 90, 255);
 }
 
 // check_jpeg_hostile: a bad size or a bad option never aborts and gives the
 // empty result.
 fn check_jpeg_hostile() {
     let ok = all_gray(9, 7);
-    assert(image::encode_jpeg(ok, 90, true, 3).len == 0);
-    assert(image::encode_jpeg(ok, 90, false, -1).len == 0);
+    assert(pixel::encode_jpeg(ok, 90, true, 3).len == 0);
+    assert(pixel::encode_jpeg(ok, 90, false, -1).len == 0);
     // A quality of 0 means 90. A quality above 100 counts as 100.
-    assert(image::encode_jpeg(ok, 0, false, 2) == image::encode_jpeg(ok, 90, false, 2));
-    assert(image::encode_jpeg(ok, 500, true, 0) == image::encode_jpeg(ok, 100, true, 0));
+    assert(pixel::encode_jpeg(ok, 0, false, 2) == pixel::encode_jpeg(ok, 90, false, 2));
+    assert(pixel::encode_jpeg(ok, 500, true, 0) == pixel::encode_jpeg(ok, 100, true, 0));
     // An empty image, a negative side, a size that does not match the bytes.
-    let empty = image::Image { width: 0, height: 0, pixels: [], icc: [], exif: [] };
-    assert(image::encode_jpeg(empty, 90, false, 0).len == 0);
-    assert(image::encode_jpeg(empty, 90, true, 2).len == 0);
-    let neg = image::Image { width: -5, height: 3, pixels: [1, 2, 3, 4], icc: [], exif: [] };
-    assert(image::encode_jpeg(neg, 90, false, 0).len == 0);
-    let huge = image::Image { width: 100000, height: 100000, pixels: [1, 2, 3, 4], icc: [], exif: [] };
-    assert(image::encode_jpeg(huge, 90, true, 2).len == 0);
-    let short = image::Image { width: 5, height: 5, pixels: [1, 2, 3, 4], icc: [], exif: [] };
-    assert(image::encode_jpeg(short, 90, false, 1).len == 0);
-    assert(image::encode_jpeg(short, 90, true, 1).len == 0);
+    let empty = pixel::Image { width: 0, height: 0, pixels: [], icc: [], exif: [] };
+    assert(pixel::encode_jpeg(empty, 90, false, 0).len == 0);
+    assert(pixel::encode_jpeg(empty, 90, true, 2).len == 0);
+    let neg = pixel::Image { width: -5, height: 3, pixels: [1, 2, 3, 4], icc: [], exif: [] };
+    assert(pixel::encode_jpeg(neg, 90, false, 0).len == 0);
+    let huge = pixel::Image { width: 100000, height: 100000, pixels: [1, 2, 3, 4], icc: [], exif: [] };
+    assert(pixel::encode_jpeg(huge, 90, true, 2).len == 0);
+    let short = pixel::Image { width: 5, height: 5, pixels: [1, 2, 3, 4], icc: [], exif: [] };
+    assert(pixel::encode_jpeg(short, 90, false, 1).len == 0);
+    assert(pixel::encode_jpeg(short, 90, true, 1).len == 0);
     // The JPEG limit is 65535 on a side. The image has a matching buffer.
     let wide = all_gray(65536, 1);
-    assert(image::encode_jpeg(wide, 90, false, 2).len == 0);
+    assert(pixel::encode_jpeg(wide, 90, false, 2).len == 0);
     let edge = all_gray(65535, 1);
-    let eb = image::encode_jpeg(edge, 90, true, 2);
+    let eb = pixel::encode_jpeg(edge, 90, true, 2);
     assert(eb.len > 0);
-    let em = image::metadata_bytes(eb);
+    let em = pixel::metadata_bytes(eb);
     assert(em.ok && em.width == 65535 && em.height == 1);
     // A write with a bad option gives false and makes no file.
-    assert(!image::write_jpeg_with("jpeg-hostile.jpg", ok, 90, false, 7));
-    assert(!image::write_jpeg_with("jpeg-hostile.jpg", empty, 90, true, 0));
+    assert(!pixel::write_jpeg_with("jpeg-hostile.jpg", ok, 90, false, 7));
+    assert(!pixel::write_jpeg_with("jpeg-hostile.jpg", empty, 90, true, 0));
     // The calls with the tables of the scan take the same options.
-    assert(image::encode_jpeg_opts(ok, 90, true, 3, true).len == 0);
-    assert(image::encode_jpeg_opts(ok, 90, false, -1, true).len == 0);
-    assert(image::encode_jpeg_opts(empty, 90, false, 0, true).len == 0);
-    assert(image::encode_jpeg_opts(neg, 90, false, 0, true).len == 0);
-    assert(image::encode_jpeg_opts(huge, 90, true, 2, true).len == 0);
-    assert(image::encode_jpeg_opts(short, 90, false, 1, true).len == 0);
-    assert(!image::write_jpeg_opts("jpeg-hostile.jpg", ok, 90, false, 7, true));
-    assert(!image::write_jpeg_opts("jpeg-hostile.jpg", empty, 90, true, 0, true));
+    assert(pixel::encode_jpeg_opts(ok, 90, true, 3, true).len == 0);
+    assert(pixel::encode_jpeg_opts(ok, 90, false, -1, true).len == 0);
+    assert(pixel::encode_jpeg_opts(empty, 90, false, 0, true).len == 0);
+    assert(pixel::encode_jpeg_opts(neg, 90, false, 0, true).len == 0);
+    assert(pixel::encode_jpeg_opts(huge, 90, true, 2, true).len == 0);
+    assert(pixel::encode_jpeg_opts(short, 90, false, 1, true).len == 0);
+    assert(!pixel::write_jpeg_opts("jpeg-hostile.jpg", ok, 90, false, 7, true));
+    assert(!pixel::write_jpeg_opts("jpeg-hostile.jpg", empty, 90, true, 0, true));
     // The tables of the scan do not change the pixels.
-    let plain = image::encode_jpeg(ok, 75, false, 0);
-    let opt = image::encode_jpeg_opts(ok, 75, false, 0, true);
+    let plain = pixel::encode_jpeg(ok, 75, false, 0);
+    let opt = pixel::encode_jpeg_opts(ok, 75, false, 0, true);
     assert(opt.len > 0 && opt.len <= plain.len);
-    assert(image::decode(opt).pixels == image::decode(plain).pixels);
+    assert(pixel::decode(opt).pixels == pixel::decode(plain).pixels);
 }
 """)
 sys.stdout.write("\n".join(out) + "\n")

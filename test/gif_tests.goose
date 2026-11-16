@@ -1,46 +1,46 @@
-// Tests of the GIF encoder and decoder for the image package.
+// Tests of the GIF encoder and decoder for the pixel package.
 //
 namespace gif_tests;
 
 import std;
 import os;
-import image from "..";
+import pixel from "..";
 
-fn solid(w: i32, h: i32, r: u8, g: u8, b: u8, a: u8) -> image::Image {
+fn solid(w: i32, h: i32, r: u8, g: u8, b: u8, a: u8) -> pixel::Image {
     var px: u8[>..] = [];
     for i in 0..(w * h) { px.push(r); px.push(g); px.push(b); px.push(a); }
-    return image::Image { width: w, height: h, pixels: px[..], icc: [], exif: [] };
+    return pixel::Image { width: w, height: h, pixels: px[..], icc: [], exif: [] };
 }
 
-fn frame(im: image::Image, delay: i32, disposal: i32) -> image::GifFrame {
-    return image::GifFrame { image: im, delay: delay, disposal: disposal };
+fn frame(im: pixel::Image, delay: i32, disposal: i32) -> pixel::GifFrame {
+    return pixel::GifFrame { image: im, delay: delay, disposal: disposal };
 }
 
 // frame_at gives a copy of frame i. Frames hold slices, so they cannot be
 // indexed, only iterated.
-fn frame_at(g: image::Gif&, i: i64) -> image::GifFrame {
+fn frame_at(g: pixel::Gif&, i: i64) -> pixel::GifFrame {
     var k = 0;
     for f in g.frames {
         if k == i { return copy(f); }
         k += 1;
     }
     assert(false);
-    return image::GifFrame { image: solid(1, 1, 0, 0, 0, 0), delay: 0, disposal: 0 };
+    return pixel::GifFrame { image: solid(1, 1, 0, 0, 0, 0), delay: 0, disposal: 0 };
 }
 
 // test_gif_round_trip writes frames and reads them again.
 fn test_gif_round_trip() {
     // Frames of one palette share the global table. Frames of other colors
     // take a local table. The loop count and the delays survive.
-    var fs: image::GifFrame[>..] = [];
+    var fs: pixel::GifFrame[>..] = [];
     fs.push(frame(solid(5, 4, 255, 0, 0, 255), 7, 1));
     fs.push(frame(solid(5, 4, 0, 255, 0, 255), 11, 2));
     fs.push(frame(solid(5, 4, 0, 0, 255, 0), 13, 3));
-    let g = image::Gif { frames: fs[..], width: 5, height: 4, loop_count: 2 };
-    let bytes = image::encode_gif(g);
+    let g = pixel::Gif { frames: fs[..], width: 5, height: 4, loop_count: 2 };
+    let bytes = pixel::encode_gif(g);
     assert(bytes.len > 0);
     assert(bytes[0] == 71 && bytes[3] == 56 && bytes[4] == 57);
-    let back = image::decode_gif(bytes);
+    let back = pixel::decode_gif(bytes);
     assert(back.frames.len == 3);
     assert(back.width == 5 && back.height == 4 && back.loop_count == 2);
     assert(frame_at(back, 0).delay == 7 && frame_at(back, 1).delay == 11 && frame_at(back, 2).delay == 13);
@@ -52,11 +52,11 @@ fn test_gif_round_trip() {
     assert(frame_at(back, 2).image.pixels[3] == 0);
 
     // A frame smaller than the screen sits at the top left.
-    var small: image::GifFrame[>..] = [];
+    var small: pixel::GifFrame[>..] = [];
     small.push(frame(solid(2, 2, 9, 8, 7, 255), 1, 0));
-    let sg = image::Gif { frames: small[..], width: 6, height: 6, loop_count: -1 };
-    let sb = image::encode_gif(sg);
-    let sback = image::decode_gif(sb);
+    let sg = pixel::Gif { frames: small[..], width: 6, height: 6, loop_count: -1 };
+    let sb = pixel::encode_gif(sg);
+    let sback = pixel::decode_gif(sb);
     assert(sback.frames.len == 1 && sback.width == 6 && sback.loop_count == -1);
     assert(frame_at(sback, 0).image.pixels[0] == 9);
     assert(frame_at(sback, 0).image.pixels[(1 * 6 + 5) * 4 + 3] == 0);
@@ -64,20 +64,20 @@ fn test_gif_round_trip() {
     // More than 256 colors in a frame still gives a valid file.
     var px: u8[>..] = [];
     for i in 0..(32 * 32) { px.push((i % 256) as u8); px.push((i / 4) as u8); px.push(0); px.push(255); }
-    var many: image::GifFrame[>..] = [];
-    many.push(frame(image::Image { width: 32, height: 32, pixels: px[..], icc: [], exif: [] }, 0, 0));
-    let mg = image::Gif { frames: many[..], width: 32, height: 32, loop_count: 0 };
-    let mb = image::encode_gif(mg);
-    assert(image::decode_gif(mb).frames.len == 1);
+    var many: pixel::GifFrame[>..] = [];
+    many.push(frame(pixel::Image { width: 32, height: 32, pixels: px[..], icc: [], exif: [] }, 0, 0));
+    let mg = pixel::Gif { frames: many[..], width: 32, height: 32, loop_count: 0 };
+    let mb = pixel::encode_gif(mg);
+    assert(pixel::decode_gif(mb).frames.len == 1);
 
     // Disposal 1 keeps a clear frame over the old one. Disposal 3 restores the
     // canvas from before the frame, which was empty.
     for d in [1, 3] {
-        var ds: image::GifFrame[>..] = [];
+        var ds: pixel::GifFrame[>..] = [];
         ds.push(frame(solid(3, 3, 200, 0, 0, 255), 1, d as i32));
         ds.push(frame(solid(3, 3, 0, 0, 0, 0), 1, 0));
-        let dg = image::Gif { frames: ds[..], width: 3, height: 3, loop_count: 0 };
-        let db = image::decode_gif(image::encode_gif(dg));
+        let dg = pixel::Gif { frames: ds[..], width: 3, height: 3, loop_count: 0 };
+        let db = pixel::decode_gif(pixel::encode_gif(dg));
         assert(db.frames.len == 2);
         let second = frame_at(db, 1);
         // The second frame is clear, so the first frame shows through for 1.
@@ -86,18 +86,18 @@ fn test_gif_round_trip() {
     }
 
     // No frame, a bad delay and a bad disposal are faults.
-    var none: image::GifFrame[>..] = [];
-    let ng = image::Gif { frames: none[..], width: 1, height: 1, loop_count: 0 };
-    assert(image::encode_gif(ng).len == 0);
-    var bad: image::GifFrame[>..] = [];
+    var none: pixel::GifFrame[>..] = [];
+    let ng = pixel::Gif { frames: none[..], width: 1, height: 1, loop_count: 0 };
+    assert(pixel::encode_gif(ng).len == 0);
+    var bad: pixel::GifFrame[>..] = [];
     bad.push(frame(solid(1, 1, 0, 0, 0, 255), 70000, 0));
-    let bg = image::Gif { frames: bad[..], width: 1, height: 1, loop_count: 0 };
-    assert(image::encode_gif(bg).len == 0);
-    var bad2: image::GifFrame[>..] = [];
+    let bg = pixel::Gif { frames: bad[..], width: 1, height: 1, loop_count: 0 };
+    assert(pixel::encode_gif(bg).len == 0);
+    var bad2: pixel::GifFrame[>..] = [];
     bad2.push(frame(solid(1, 1, 0, 0, 0, 255), 1, 4));
-    let bg2 = image::Gif { frames: bad2[..], width: 1, height: 1, loop_count: 0 };
-    assert(image::encode_gif(bg2).len == 0);
-    assert(image::decode_gif_path("test/no-such-file.gif").frames.len == 0);
+    let bg2 = pixel::Gif { frames: bad2[..], width: 1, height: 1, loop_count: 0 };
+    assert(pixel::encode_gif(bg2).len == 0);
+    assert(pixel::decode_gif_path("test/no-such-file.gif").frames.len == 0);
     print("gif round trip ok\n");
 }
 
@@ -111,13 +111,13 @@ fn test_gif_quant() {
         px.push((i * 3 % 256) as u8);
         px.push(255);
     }
-    let img = image::Image { width: 32, height: 32, pixels: px[..], icc: [], exif: [] };
-    var fs: image::GifFrame[>..] = [];
+    let img = pixel::Image { width: 32, height: 32, pixels: px[..], icc: [], exif: [] };
+    var fs: pixel::GifFrame[>..] = [];
     fs.push(frame(copy(img), 0, 0));
-    let g = image::Gif { frames: fs[..], width: 32, height: 32, loop_count: 0 };
-    let bytes = image::encode_gif(g);
+    let g = pixel::Gif { frames: fs[..], width: 32, height: 32, loop_count: 0 };
+    let bytes = pixel::encode_gif(g);
     assert(bytes.len > 0);
-    let back = image::decode_gif(bytes);
+    let back = pixel::decode_gif(bytes);
     assert(back.frames.len == 1);
     let fr = frame_at(back, 0);
     let got = fr.image.pixels;
@@ -134,7 +134,7 @@ fn test_gif_quant() {
     }
     assert(sum * 1000 / (32 * 32 * 3) < 12000);
     // The same image again gives the same file.
-    assert(image::encode_gif(g) == bytes);
+    assert(pixel::encode_gif(g) == bytes);
     print("gif quant ok\n");
 }
 
@@ -148,11 +148,11 @@ fn test_gif_clear() {
     for i in 0..(16 * 16) {
         px.push(0); px.push(0); px.push(255); px.push(0);
     }
-    let img = image::Image { width: 16, height: 32, pixels: px[..], icc: [], exif: [] };
-    var fs: image::GifFrame[>..] = [];
+    let img = pixel::Image { width: 16, height: 32, pixels: px[..], icc: [], exif: [] };
+    var fs: pixel::GifFrame[>..] = [];
     fs.push(frame(copy(img), 0, 0));
-    let g = image::Gif { frames: fs[..], width: 16, height: 32, loop_count: 0 };
-    let back = image::decode_gif(image::encode_gif(g));
+    let g = pixel::Gif { frames: fs[..], width: 16, height: 32, loop_count: 0 };
+    let back = pixel::decode_gif(pixel::encode_gif(g));
     assert(back.frames.len == 1);
     let fr = frame_at(back, 0);
     let got = fr.image.pixels;
@@ -169,10 +169,10 @@ fn test_gif_clear() {
         many.push((i * 5 % 256) as u8);
         many.push(if i < 32 * 16 { 255 } else { 0 });
     }
-    var fs2: image::GifFrame[>..] = [];
-    fs2.push(frame(image::Image { width: 32, height: 32, pixels: many[..], icc: [], exif: [] }, 0, 0));
-    let g2 = image::Gif { frames: fs2[..], width: 32, height: 32, loop_count: 0 };
-    let back2 = image::decode_gif(image::encode_gif(g2));
+    var fs2: pixel::GifFrame[>..] = [];
+    fs2.push(frame(pixel::Image { width: 32, height: 32, pixels: many[..], icc: [], exif: [] }, 0, 0));
+    let g2 = pixel::Gif { frames: fs2[..], width: 32, height: 32, loop_count: 0 };
+    let back2 = pixel::decode_gif(pixel::encode_gif(g2));
     assert(back2.frames.len == 1);
     let fr2 = frame_at(back2, 0);
     let got2 = fr2.image.pixels;
@@ -200,12 +200,12 @@ fn test_gif_offsets() {
             sq.push(10); sq.push(20); sq.push(30); sq.push(255);
         }
     }
-    var fs: image::GifFrame[>..] = [];
-    fs.push(frame(image::Image { width: 32, height: 32, pixels: px[..], icc: [], exif: [] }, 0, 0));
-    fs.push(frame(image::Image { width: 32, height: 32, pixels: sq[..], icc: [], exif: [] }, 0, 0));
-    let g = image::Gif { frames: fs[..], width: 32, height: 32, loop_count: 0 };
-    let bytes = image::encode_gif(g);
-    let back = image::decode_gif(bytes);
+    var fs: pixel::GifFrame[>..] = [];
+    fs.push(frame(pixel::Image { width: 32, height: 32, pixels: px[..], icc: [], exif: [] }, 0, 0));
+    fs.push(frame(pixel::Image { width: 32, height: 32, pixels: sq[..], icc: [], exif: [] }, 0, 0));
+    let g = pixel::Gif { frames: fs[..], width: 32, height: 32, loop_count: 0 };
+    let bytes = pixel::encode_gif(g);
+    let back = pixel::decode_gif(bytes);
     assert(back.frames.len == 2);
     // The square of the second frame shows up.
     let fr = frame_at(back, 1);
@@ -221,18 +221,18 @@ fn test_gif_offsets() {
     for i in 0..(32 * 32) {
         all.push(90); all.push(80); all.push(70); all.push(255);
     }
-    var fs2: image::GifFrame[>..] = [];
-    fs2.push(frame(image::Image { width: 32, height: 32, pixels: px[..], icc: [], exif: [] }, 0, 0));
-    fs2.push(frame(image::Image { width: 32, height: 32, pixels: all[..], icc: [], exif: [] }, 0, 0));
-    let g2 = image::Gif { frames: fs2[..], width: 32, height: 32, loop_count: 0 };
-    assert(image::encode_gif(g2).len > bytes.len);
+    var fs2: pixel::GifFrame[>..] = [];
+    fs2.push(frame(pixel::Image { width: 32, height: 32, pixels: px[..], icc: [], exif: [] }, 0, 0));
+    fs2.push(frame(pixel::Image { width: 32, height: 32, pixels: all[..], icc: [], exif: [] }, 0, 0));
+    let g2 = pixel::Gif { frames: fs2[..], width: 32, height: 32, loop_count: 0 };
+    assert(pixel::encode_gif(g2).len > bytes.len);
     // A frame that holds the same pixels as the frame before it keeps its
     // place in the file.
-    var fs3: image::GifFrame[>..] = [];
-    fs3.push(frame(image::Image { width: 32, height: 32, pixels: px[..], icc: [], exif: [] }, 0, 0));
-    fs3.push(frame(image::Image { width: 32, height: 32, pixels: px[..], icc: [], exif: [] }, 0, 0));
-    let g3 = image::Gif { frames: fs3[..], width: 32, height: 32, loop_count: 0 };
-    let same = image::decode_gif(image::encode_gif(g3));
+    var fs3: pixel::GifFrame[>..] = [];
+    fs3.push(frame(pixel::Image { width: 32, height: 32, pixels: px[..], icc: [], exif: [] }, 0, 0));
+    fs3.push(frame(pixel::Image { width: 32, height: 32, pixels: px[..], icc: [], exif: [] }, 0, 0));
+    let g3 = pixel::Gif { frames: fs3[..], width: 32, height: 32, loop_count: 0 };
+    let same = pixel::decode_gif(pixel::encode_gif(g3));
     assert(same.frames.len == 2);
     let sfr = frame_at(same, 1);
     assert(sfr.image.pixels[0] == 10 && sfr.image.pixels[3] == 255);
@@ -241,18 +241,18 @@ fn test_gif_offsets() {
 
 // test_gif_hostile feeds broken files. Nothing aborts and each one ends fast.
 fn test_gif_hostile() {
-    var fs: image::GifFrame[>..] = [];
+    var fs: pixel::GifFrame[>..] = [];
     fs.push(frame(solid(6, 5, 1, 2, 3, 255), 4, 0));
     fs.push(frame(solid(6, 5, 4, 5, 6, 255), 4, 0));
-    let hg = image::Gif { frames: fs[..], width: 6, height: 5, loop_count: 0 };
-    let good = image::encode_gif(hg);
-    assert(image::decode_gif(good).frames.len == 2);
+    let hg = pixel::Gif { frames: fs[..], width: 6, height: 5, loop_count: 0 };
+    let good = pixel::encode_gif(hg);
+    assert(pixel::decode_gif(good).frames.len == 2);
     // Every cut is a fault or a shorter animation. Only the trailer may be missing.
     for n in 0..(good.len - 1) {
-        let cut = image::decode_gif(good[..n]);
+        let cut = pixel::decode_gif(good[..n]);
         assert(cut.frames.len < 2);
     }
-    assert(image::decode_gif([]).frames.len == 0);
+    assert(pixel::decode_gif([]).frames.len == 0);
     // A bad LZW size byte: find the image descriptor and break the byte.
     var bad: u8[>..] = [];
     bad.append(good);
@@ -262,12 +262,12 @@ fn test_gif_hostile() {
     var k = at + 10;
     if (bad[at + 9] & 128) != 0 { k += 3 * (1 << ((bad[at + 9] & 7) + 1)); }
     bad[k] = 0;
-    assert(image::decode_gif(bad[..]).frames.len == 0);
+    assert(pixel::decode_gif(bad[..]).frames.len == 0);
     bad[k] = 9;
-    assert(image::decode_gif(bad[..]).frames.len == 0);
+    assert(pixel::decode_gif(bad[..]).frames.len == 0);
     // A screen of 65535 by 65535 in a file of 13 bytes.
     var huge: u8[>..] = [71, 73, 70, 56, 57, 97, 255, 255, 255, 255, 0, 0, 0, 59];
-    assert(image::decode_gif(huge[..]).frames.len == 0);
+    assert(pixel::decode_gif(huge[..]).frames.len == 0);
     // A huge count of tiny frames gives a fault at the size cap or a long
     // list. Either way it ends fast.
     var many: u8[>..] = [71, 73, 70, 56, 57, 97, 200, 0, 200, 0, 128, 0, 0, 0, 0, 0, 255, 255, 255];
@@ -275,7 +275,7 @@ fn test_gif_hostile() {
         many.append([44, 0, 0, 0, 0, 200, 0, 200, 0, 0, 2, 2, 68, 1, 0]);
     }
     many.push(59);
-    let big = image::decode_gif(many[..]);
+    let big = pixel::decode_gif(many[..]);
     assert(big.frames.len < 3000);
     print("gif hostile ok\n");
 }

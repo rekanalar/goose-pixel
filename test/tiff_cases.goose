@@ -4,7 +4,7 @@
 namespace tiff_cases;
 
 import std;
-import image from "..";
+import pixel from "..";
 
 fn hexval(c: u8) -> i64 {
     if c >= 97 { return c - 87; }
@@ -25,10 +25,10 @@ fn from_hex(s: u8[:]) -> u8[] {
 // tiff_case decodes the file. The pixels must match the pixels of the oracle.
 fn tiff_case(file: u8[:], w: i32, h: i32, channels: i32, want: u8[:]) {
     let bytes = from_hex(file);
-    let m = image::metadata_bytes(bytes);
-    assert(m.ok && m.kind == image::KIND_TIFF && m.width == w && m.height == h);
+    let m = pixel::metadata_bytes(bytes);
+    assert(m.ok && m.kind == pixel::KIND_TIFF && m.width == w && m.height == h);
     assert(m.channels == channels);
-    let img = image::decode(bytes);
+    let img = pixel::decode(bytes);
     assert(img.width == w && img.height == h);
     assert(img.pixels == from_hex(want));
 }
@@ -36,8 +36,8 @@ fn tiff_case(file: u8[:], w: i32, h: i32, channels: i32, want: u8[:]) {
 // pages_case counts the pages and decodes the first one.
 fn pages_case(file: u8[:], pages: i32, w: i32, h: i32, want: u8[:]) {
     let bytes = from_hex(file);
-    assert(image::decode_tiff_pages(bytes) == pages);
-    let img = image::decode(bytes);
+    assert(pixel::decode_tiff_pages(bytes) == pages);
+    let img = pixel::decode(bytes);
     assert(img.width == w && img.height == h);
     assert(img.pixels == from_hex(want));
 }
@@ -46,10 +46,10 @@ fn pages_case(file: u8[:], pages: i32, w: i32, h: i32, want: u8[:]) {
 // nothing gives a size that the bytes do not hold.
 fn hostile_check(file: u8[:]) {
     let bytes = from_hex(file);
-    let img = image::decode(bytes);
+    let img = pixel::decode(bytes);
     assert(img.pixels.len == 0 || img.pixels.len == img.width * img.height * 4);
-    image::metadata_bytes(bytes);
-    image::decode_tiff_pages(bytes);
+    pixel::metadata_bytes(bytes);
+    pixel::decode_tiff_pages(bytes);
 }
 
 fn check_decode() {

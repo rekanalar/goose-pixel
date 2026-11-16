@@ -8,7 +8,7 @@
 // The reader takes the raw bytes and gives the value of one tag. It
 // gives an empty text when the tag is not there or the block is not a
 // TIFF. A hostile block never aborts the program.
-namespace image;
+namespace pixel;
 
 import std;
 

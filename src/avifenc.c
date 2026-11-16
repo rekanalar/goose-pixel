@@ -1,4 +1,4 @@
-// The AVIF encode part of the goose-image package. It wraps the vendored
+// The AVIF encode part of the goose-pixel package. It wraps the vendored
 // libaom and writes the ISOBMFF container of a still AVIF file.
 //
 // This file does not include goose.h on purpose, like src/avif.c.

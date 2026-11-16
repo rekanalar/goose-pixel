@@ -1,4 +1,4 @@
-// The AVIF decode part of the goose-image package. It wraps the vendored
+// The AVIF decode part of the goose-pixel package. It wraps the vendored
 // dav1d and reads the ISOBMFF container of a still AVIF file.
 //
 // This file does not include goose.h on purpose. The types of dav1d and the

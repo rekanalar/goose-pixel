@@ -4,7 +4,7 @@
 namespace avif_cases;
 
 import std;
-import image from "..";
+import pixel from "..";
 
 fn hexval(c: u8) -> i64 {
     if c >= 97 { return c - 87; }
@@ -27,10 +27,10 @@ fn from_hex(s: u8[:]) -> u8[] {
 // that the mean difference may be, in hundredths.
 fn avif_case(file: u8[:], w: i32, h: i32, channels: i32, tol: i32, want: u8[:], strict16: bool) {
     let bytes = from_hex(file);
-    let m = image::metadata_bytes(bytes);
-    assert(m.ok && m.kind == image::KIND_AVIF && m.width == w && m.height == h);
+    let m = pixel::metadata_bytes(bytes);
+    assert(m.ok && m.kind == pixel::KIND_AVIF && m.width == w && m.height == h);
     assert(m.channels == channels);
-    let img = image::decode_avif(bytes);
+    let img = pixel::decode_avif(bytes);
     assert(img.width == w && img.height == h);
     let px = from_hex(want);
     assert(img.pixels.len == px.len);
@@ -42,12 +42,12 @@ fn avif_case(file: u8[:], w: i32, h: i32, channels: i32, tol: i32, want: u8[:], 
     }
     assert(worst <= tol);
     // decode sniffs the format and gives the same pixels.
-    let again = image::decode(bytes);
+    let again = pixel::decode(bytes);
     assert(again.pixels == img.pixels);
     // The 16 bit read holds the same picture.
-    let wide = image::decode_avif16(bytes);
+    let wide = pixel::decode_avif16(bytes);
     assert(wide.width == w && wide.height == h && wide.pixels.len == px.len);
-    let narrow = image::to_image8(wide);
+    let narrow = pixel::to_image8(wide);
     // A premultiplied file undoes the product in 8 bits or in 16 bits, so the
     // two reads may differ where the alpha is small.
     for i in 0..px.len {
@@ -62,12 +62,12 @@ fn avif_case(file: u8[:], w: i32, h: i32, channels: i32, tol: i32, want: u8[:], 
 // nothing gives a size that the bytes do not hold.
 fn hostile_check(file: u8[:]) {
     let bytes = from_hex(file);
-    let img = image::decode(bytes);
+    let img = pixel::decode(bytes);
     assert(img.pixels.len == 0 || img.pixels.len == img.width * img.height * 4);
     assert(img.width <= 16384 && img.height <= 16384);
-    let wide = image::decode16(bytes);
+    let wide = pixel::decode16(bytes);
     assert(wide.pixels.len == 0 || wide.pixels.len == wide.width * wide.height * 4);
-    let m = image::metadata_bytes(bytes);
+    let m = pixel::metadata_bytes(bytes);
     if m.ok && img.pixels.len > 0 {
         assert(m.width == img.width && m.height == img.height);
     }

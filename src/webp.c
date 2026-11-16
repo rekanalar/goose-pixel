@@ -1,4 +1,4 @@
-// The WebP part of the goose-image package. It wraps the vendored libwebp.
+// The WebP part of the goose-pixel package. It wraps the vendored libwebp.
 //
 // This file does not include goose.h on purpose. The types of libwebp and
 // the types of the Goose compiler must not meet in one file: on Windows,

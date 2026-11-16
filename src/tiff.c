@@ -1,4 +1,4 @@
-// The TIFF codec of the goose-image package.
+// The TIFF codec of the goose-pixel package.
 //
 // The reader gives the first page of a file as RGBA pixels. It reads the
 // little endian and the big endian form, the strips and the tiles, the

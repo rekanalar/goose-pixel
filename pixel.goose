@@ -1,4 +1,4 @@
-// image - image decoding and encoding for Goose.
+// pixel - image decoding and encoding for Goose.
 //
 // The package reads PNG, JPEG, BMP, GIF, TGA, PSD, HDR, PNM, PIC, WebP and AVIF. It
 // writes PNG, JPEG, BMP, TGA, HDR and WebP, to a file or to memory, and it
@@ -9,12 +9,12 @@
 // headers are vendored in the vendor directory, so the package needs no
 // system library.
 //
-// The repository is goose-image. The package name is what a program imports
-// it by, so the name is "image".
+// The repository is goose-pixel. The package name is what a program imports
+// it by, so the name is "pixel".
 //
-// Every file in this package declares "namespace image;". A user calls
-// image::load. A user calls image::write_png.
-namespace image;
+// Every file in this package declares "namespace pixel;". A user calls
+// pixel::load. A user calls pixel::write_png.
+namespace pixel;
 
 import std;
 import os;
@@ -22,7 +22,7 @@ import geometry;
 import exif;
 import gif;
 
-// The C functions of the package. The definitions are in src/image.c.
+// The C functions of the package. The definitions are in src/pixel.c.
 // Each one takes eight argument slots or fewer (the TinyCC JIT on arm64).
 extern fn img_load(path: const u8[:], out: u8[>..]&, w: i32&, h: i32&) -> bool;
 extern fn img_decode(data: const u8[:], out: u8[>..]&, w: i32&, h: i32&) -> bool;

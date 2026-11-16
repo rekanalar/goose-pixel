@@ -1,4 +1,4 @@
-// The C part of the goose-image package.
+// The C part of the goose-pixel package.
 //
 // It wraps stb_image, stb_image_write and stb_image_resize2. The
 // headers are vendored in the vendor directory. The package needs no

@@ -4,7 +4,7 @@
 namespace geometry_cases;
 
 import std;
-import image from "..";
+import pixel from "..";
 
 fn hexval(c: u8) -> i64 {
     if c >= 97 { return c - 87; }
@@ -12,7 +12,7 @@ fn hexval(c: u8) -> i64 {
 }
 
 // from_hex makes an image from a string of hex digits.
-fn from_hex(w: i32, h: i32, s: u8[:]) -> image::Image {
+fn from_hex(w: i32, h: i32, s: u8[:]) -> pixel::Image {
     var px: u8[>..] = [];
     var i = 0;
     while i + 1 < s.len {
@@ -20,11 +20,11 @@ fn from_hex(w: i32, h: i32, s: u8[:]) -> image::Image {
         px.push(v as u8);
         i += 2;
     }
-    return image::Image { width: w, height: h, pixels: px[..], icc: [], exif: [] };
+    return pixel::Image { width: w, height: h, pixels: px[..], icc: [], exif: [] };
 }
 
 // same tells whether the image has the size and the pixels of the string.
-fn same(img: image::Image&, w: i32, h: i32, s: u8[:]) -> bool {
+fn same(img: pixel::Image&, w: i32, h: i32, s: u8[:]) -> bool {
     if img.width != w || img.height != h { return false; }
     let want = from_hex(w, h, s);
     return img.pixels == want.pixels;
@@ -33,7 +33,7 @@ fn same(img: image::Image&, w: i32, h: i32, s: u8[:]) -> bool {
 fn crop_case(sw: i32, sh: i32, src: u8[:], l: i32, t: i32, r: i32, b: i32,
     ew: i32, eh: i32, want: u8[:]) {
     var img = from_hex(sw, sh, src);
-    let got = image::crop(img, l, t, r, b);
+    let got = pixel::crop(img, l, t, r, b);
     assert(same(got, ew, eh, want));
     // The source stays as it was.
     assert(same(img, sw, sh, src));
@@ -42,7 +42,7 @@ fn crop_case(sw: i32, sh: i32, src: u8[:], l: i32, t: i32, r: i32, b: i32,
 fn transpose_case(sw: i32, sh: i32, src: u8[:], op: i32, ew: i32, eh: i32,
     want: u8[:]) {
     var img = from_hex(sw, sh, src);
-    let got = image::transpose(img, op);
+    let got = pixel::transpose(img, op);
     assert(same(got, ew, eh, want));
     assert(same(img, sw, sh, src));
 }
@@ -51,7 +51,7 @@ fn paste_case(dw: i32, dh: i32, dst: u8[:], sw: i32, sh: i32, src: u8[:],
     x: i32, y: i32, want: u8[:]) {
     var d = from_hex(dw, dh, dst);
     var s = from_hex(sw, sh, src);
-    image::paste(d, s, x, y);
+    pixel::paste(d, s, x, y);
     assert(same(d, dw, dh, want));
     assert(same(s, sw, sh, src));
 }
@@ -60,7 +60,7 @@ fn blend_case(dw: i32, dh: i32, dst: u8[:], sw: i32, sh: i32, src: u8[:],
     x: i32, y: i32, want: u8[:]) {
     var d = from_hex(dw, dh, dst);
     var s = from_hex(sw, sh, src);
-    image::alpha_composite(d, s, x, y);
+    pixel::alpha_composite(d, s, x, y);
     assert(same(d, dw, dh, want));
     assert(same(s, sw, sh, src));
 }
@@ -68,7 +68,7 @@ fn blend_case(dw: i32, dh: i32, dst: u8[:], sw: i32, sh: i32, src: u8[:],
 fn rotate_case(sw: i32, sh: i32, src: u8[:], angle: f64, expand: bool,
     ew: i32, eh: i32, want: u8[:]) {
     var img = from_hex(sw, sh, src);
-    let got = image::rotate(img, angle, expand);
+    let got = pixel::rotate(img, angle, expand);
     assert(same(got, ew, eh, want));
     assert(same(img, sw, sh, src));
 }

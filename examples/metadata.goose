@@ -7,7 +7,7 @@
 
 import std;
 import os;
-import image from "..";
+import pixel from "..";
 
 fn main() {
     // A small image with metadata.
@@ -17,11 +17,11 @@ fn main() {
     // file that the caller reads.
     var px: u8[>..] = [];
     for i in 0..8 * 8 * 4 { px.push(if i % 4 == 0 { 10 } else if i % 4 == 1 { 20 } else if i % 4 == 2 { 30 } else { 255 }); }
-    let img = image::Image { width: 8, height: 8, pixels: px[..], icc: icc[..], exif: [] };
-    let bytes = image::encode(img, image::FORMAT_JPEG, 90);
+    let img = pixel::Image { width: 8, height: 8, pixels: px[..], icc: icc[..], exif: [] };
+    let bytes = pixel::encode(img, pixel::FORMAT_JPEG, 90);
     assert(bytes.len > 0);
 
-    let back = image::decode(bytes);
+    let back = pixel::decode(bytes);
     print("icc bytes: ");
     print(back.icc.len);
     print("\nexif bytes: ");

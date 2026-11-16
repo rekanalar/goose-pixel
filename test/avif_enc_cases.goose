@@ -4,7 +4,7 @@
 namespace avif_enc_cases;
 
 import std;
-import image from "..";
+import pixel from "..";
 
 fn hexval(c: u8) -> i64 {
     if c >= 97 { return c - 87; }
@@ -40,8 +40,8 @@ fn be32(b: u8[:], at: i64) -> i64 {
 // brand, the size in ispe, the alpha item and the mdat. It writes the file
 // for the Pillow check of the script.
 fn avif_case(n: i32, file: u8[:], w: i32, h: i32, q: i32, speed: i32, alpha: bool, want: u8[:]) {
-    let img = image::Image { width: w, height: h, pixels: from_hex(want), icc: [], exif: [] };
-    let out = image::encode_avif(img, q, speed);
+    let img = pixel::Image { width: w, height: h, pixels: from_hex(want), icc: [], exif: [] };
+    let out = pixel::encode_avif(img, q, speed);
     assert(out.len > 64);
     assert(be32(out, 0) == 28 || be32(out, 0) == 32);
     assert(find(out, "ftyp") == 4 && find(out, "avif") == 8);
@@ -51,8 +51,8 @@ fn avif_case(n: i32, file: u8[:], w: i32, h: i32, q: i32, speed: i32, alpha: boo
     assert((find(out, "auxl") > 0) == alpha);
     assert(find(out, "mdat") > 0);
     // The same bytes come out of a second encode.
-    assert(image::encode_avif(img, q, speed) == out);
-    assert(image::write_avif_with(file, img, q, speed));
+    assert(pixel::encode_avif(img, q, speed) == out);
+    assert(pixel::write_avif_with(file, img, q, speed));
 }
 
 fn check_cases() {
@@ -104,38 +104,38 @@ fn check_avif_enc() {
 
 fn check_hostile() {
     // A zero size image and an image with too few pixels fail with an empty result.
-    let none = image::Image { width: 0, height: 0, pixels: [], icc: [], exif: [] };
-    assert(image::encode_avif(none, 75, 6).len == 0);
-    assert(!image::write_avif("test-avif-enc-none.avif", none));
-    let short = image::Image { width: 4, height: 4, pixels: [], icc: [], exif: [] };
-    assert(image::encode_avif(short, 75, 6).len == 0);
-    let neg = image::Image { width: -3, height: 4, pixels: [], icc: [], exif: [] };
-    assert(image::encode_avif(neg, 75, 6).len == 0);
+    let none = pixel::Image { width: 0, height: 0, pixels: [], icc: [], exif: [] };
+    assert(pixel::encode_avif(none, 75, 6).len == 0);
+    assert(!pixel::write_avif("test-avif-enc-none.avif", none));
+    let short = pixel::Image { width: 4, height: 4, pixels: [], icc: [], exif: [] };
+    assert(pixel::encode_avif(short, 75, 6).len == 0);
+    let neg = pixel::Image { width: -3, height: 4, pixels: [], icc: [], exif: [] };
+    assert(pixel::encode_avif(neg, 75, 6).len == 0);
     // A side over 16384 fails, with and without the pixels.
-    let wide = image::new_image(16385, 1, 1, 2, 3, 4);
-    assert(image::encode_avif(wide, 75, 6).len == 0);
-    let tall = image::new_image(1, 16385, 1, 2, 3, 4);
-    assert(image::encode_avif(tall, 75, 6).len == 0);
-    let wide_empty = image::Image { width: 16385, height: 1, pixels: [], icc: [], exif: [] };
-    assert(image::encode_avif(wide_empty, 75, 6).len == 0);
+    let wide = pixel::new_image(16385, 1, 1, 2, 3, 4);
+    assert(pixel::encode_avif(wide, 75, 6).len == 0);
+    let tall = pixel::new_image(1, 16385, 1, 2, 3, 4);
+    assert(pixel::encode_avif(tall, 75, 6).len == 0);
+    let wide_empty = pixel::Image { width: 16385, height: 1, pixels: [], icc: [], exif: [] };
+    assert(pixel::encode_avif(wide_empty, 75, 6).len == 0);
     // A speed or a quality out of range does not abort.
-    let img = image::new_image(8, 8, 10, 200, 90, 255);
-    assert(image::encode_avif(img, -5, -1).len > 0);
-    assert(image::encode_avif(img, 900, 99).len > 0);
+    let img = pixel::new_image(8, 8, 10, 200, 90, 255);
+    assert(pixel::encode_avif(img, -5, -1).len > 0);
+    assert(pixel::encode_avif(img, 900, 99).len > 0);
     // The quality changes the size: noise needs more bytes at a high quality.
-    var noisy = image::new_image(32, 32, 0, 0, 0, 255);
+    var noisy = pixel::new_image(32, 32, 0, 0, 0, 255);
     for y in 0..32 { for x in 0..32 {
         let xi = x as i32; let yi = y as i32;
-        image::set_pixel(noisy, xi, yi, ((xi * 37 + yi * 11) % 256) as u8, ((xi * 5 + yi * 71) % 256) as u8, ((xi * yi * 3) % 256) as u8, 255);
+        pixel::set_pixel(noisy, xi, yi, ((xi * 37 + yi * 11) % 256) as u8, ((xi * 5 + yi * 71) % 256) as u8, ((xi * yi * 3) % 256) as u8, 255);
     } }
-    let lo = image::encode_avif(noisy, 10, 9);
-    let hi = image::encode_avif(noisy, 90, 9);
+    let lo = pixel::encode_avif(noisy, 10, 9);
+    let hi = pixel::encode_avif(noisy, 90, 9);
     assert(lo.len > 0 && hi.len > lo.len);
     // encode takes the format number, and the numbers are stable.
-    let via = image::encode(img, image::FORMAT_AVIF, 50);
+    let via = pixel::encode(img, pixel::FORMAT_AVIF, 50);
     assert(via.len > 64 && via[4] == 'f' && via[8] == 'a');
-    assert(image::FORMAT_PNG == 0 && image::FORMAT_JPEG == 1 && image::FORMAT_BMP == 2);
-    assert(image::FORMAT_TGA == 3 && image::FORMAT_HDR == 4 && image::FORMAT_WEBP == 5);
-    assert(image::FORMAT_AVIF == 7);
-    assert(image::KIND_PIC == 9 && image::KIND_WEBP == 10 && image::KIND_AVIF == 12);
+    assert(pixel::FORMAT_PNG == 0 && pixel::FORMAT_JPEG == 1 && pixel::FORMAT_BMP == 2);
+    assert(pixel::FORMAT_TGA == 3 && pixel::FORMAT_HDR == 4 && pixel::FORMAT_WEBP == 5);
+    assert(pixel::FORMAT_AVIF == 7);
+    assert(pixel::KIND_PIC == 9 && pixel::KIND_WEBP == 10 && pixel::KIND_AVIF == 12);
 }

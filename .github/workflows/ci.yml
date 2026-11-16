@@ -58,7 +58,7 @@ jobs:
           "$exe" --help | head -3
 
       - name: Check the entry file
-        run: goose check image.goose
+        run: goose check pixel.goose
         env:
           GOOSE_HOME: ${{ runner.temp }}/goose-home
 
