@@ -486,7 +486,7 @@ fn words_of(raw: const u8[:]) -> u16[] {
     var out: u16[>..] = [];
     var i: i64 = 0;
     while i + 1 < raw.len {
-        out.push((raw[i] as i64 | (raw[i + 1] as i64) << 8) as u16);
+        out.push((raw[i] | (raw[i + 1] as i64) << 8) as u16);
         i += 2;
     }
     return out[..];

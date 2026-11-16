@@ -73,7 +73,7 @@ fn gif_quant_case(w: i32, h: i32, src: u8[:], bound: i64) {
     while i < w * h {
         if want[i * 4 + 3] >= 128 {
             for c in 0..3 {
-                var d = got[i * 4 + c] as i64 - want[i * 4 + c] as i64;
+                var d = got[i * 4 + c] as i64 - want[i * 4 + c];
                 if d < 0 { d = -d; }
                 sum += d;
                 n += 1;
@@ -115,7 +115,7 @@ fn gif_anim_case(w: i32, h: i32, n: i64, src: u8[:], bound: i64) {
         while i < w * h {
             if want[(f * w * h + i) * 4 + 3] >= 128 {
                 for c in 0..3 {
-                    var d = got[i * 4 + c] as i64 - want[(f * w * h + i) * 4 + c] as i64;
+                    var d = got[i * 4 + c] as i64 - want[(f * w * h + i) * 4 + c];
                     if d < 0 { d = -d; }
                     sum += d;
                     cnt += 1;

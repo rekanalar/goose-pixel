@@ -35,7 +35,7 @@ fn empty_gif() -> Gif {
 }
 
 fn le32(b: const u8[:], at: i64) -> i32 {
-    let v: i64 = b[at] as i64 + (b[at + 1] as i64) * 256 + (b[at + 2] as i64) * 65536
+    let v: i64 = b[at] + (b[at + 1] as i64) * 256 + (b[at + 2] as i64) * 65536
         + (b[at + 3] as i64) * 16777216;
     if v >= 2147483648 { return (v - 4294967296) as i32; }
     return v as i32;
@@ -50,7 +50,7 @@ fn decode_gif(data: const u8[:]) -> Gif {
     let w = le32(meta[..], 0);
     let h = le32(meta[..], 4);
     let loops = le32(meta[..], 8);
-    let size: i64 = w as i64 * h as i64 * 4;
+    let size: i64 = w as i64 * h * 4;
     let count = (meta.len - 12) / 8;
     var frames: GifFrame[>..] = [];
     for i in 0..count {
@@ -82,7 +82,7 @@ fn encode_gif(gif: Gif&) -> u8[] {
     meta.push(gif.loop_count);
     meta.push(gif.frames.len as i32);
     for f in gif.frames {
-        let need: i64 = f.image.width as i64 * f.image.height as i64 * 4;
+        let need: i64 = f.image.width as i64 * f.image.height * 4;
         if f.image.width < 1 || f.image.height < 1 || f.image.pixels.len != need { return []; }
         meta.push(f.image.width);
         meta.push(f.image.height);

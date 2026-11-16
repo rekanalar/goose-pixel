@@ -36,7 +36,7 @@ fn avif_case(file: u8[:], w: i32, h: i32, channels: i32, tol: i32, want: u8[:], 
     assert(img.pixels.len == px.len);
     var worst: i32 = 0;
     for i in 0..px.len {
-        var d: i32 = img.pixels[i] as i32 - px[i] as i32;
+        var d: i32 = img.pixels[i] as i32 - px[i];
         if d < 0 { d = -d; }
         if d > worst { worst = d; }
     }
@@ -52,7 +52,7 @@ fn avif_case(file: u8[:], w: i32, h: i32, channels: i32, tol: i32, want: u8[:], 
     // two reads may differ where the alpha is small.
     for i in 0..px.len {
         if !strict16 { break; }
-        var d: i32 = narrow.pixels[i] as i32 - img.pixels[i] as i32;
+        var d: i32 = narrow.pixels[i] as i32 - img.pixels[i];
         if d < 0 { d = -d; }
         assert(d <= tol);
     }

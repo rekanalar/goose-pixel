@@ -126,7 +126,7 @@ fn test_gif_quant() {
     var i: i64 = 0;
     while i < 32 * 32 {
         for c in 0..3 {
-            var d = got[i * 4 + c] as i64 - px[i * 4 + c] as i64;
+            var d = got[i * 4 + c] as i64 - px[i * 4 + c];
             if d < 0 { d = -d; }
             sum += d;
         }
