@@ -56,9 +56,10 @@ and on PNG. The check ran the round trip against Pillow 13.0.0.
 
 - The package was named `image` before v2.0.0. The old form was
   `import image from "rekanalar/goose-image@v1.0.0";`. The new form is
-  `import pixel from "rekanalar/goose-pixel@v2.0.0";`. A program that
+  `import pixel from "rekanalar/goose-pixel@v2.0.1";`. A program that
   used the old name must change its import line and every call from
-  `image::` to `pixel::`.
+  `image::` to `pixel::`. The old repository name is gone. A pin to it
+  fails.
 - GIF: the writer builds a median-cut palette of 256 colors for each frame.
   It cuts a frame to the box that changed. Disposal 3 is read, and the
   writer keeps whole frames when a frame uses it. The canvases of one GIF
@@ -135,7 +136,7 @@ Risks that stay:
 Put this line in the root file of your program:
 
 ```goose
-import pixel from "rekanalar/goose-pixel@v2.0.0";
+import pixel from "rekanalar/goose-pixel@v2.0.1";
 ```
 
 The first run builds the C part of the package. It needs a C compiler on
@@ -148,7 +149,7 @@ and v2026.3 on each.
 
 ```goose
 import std;
-import pixel from "rekanalar/goose-pixel@v2.0.0";
+import pixel from "rekanalar/goose-pixel@v2.0.1";
 
 fn main() {
     var img = pixel::load("photo.png");
